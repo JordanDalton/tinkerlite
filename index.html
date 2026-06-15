@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TinkerLite</title>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar (width is resizable via #resize-sidebar handle) -->
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <img src="/icon.png" class="app-logo" alt="TinkerLite" />
+        <span class="app-name">TinkerLite</span>
+      </div>
+      <div id="project-list"></div>
+      <div id="sidebar-footer">
+        <button id="btn-new-project" class="btn-ghost">＋ New Project</button>
+        <button id="btn-shortcuts" class="btn-icon-footer" title="Keyboard shortcuts (?)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <button id="btn-theme" class="btn-icon-footer" title="Edit theme">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </aside>
+    <div class="resize-handle" id="resize-sidebar"></div>
+
+    <!-- Main area -->
+    <div id="main">
+      <!-- Toolbar -->
+      <div id="toolbar">
+        <div id="conn-indicator">
+          <span id="conn-indicator-icon" class="conn-indicator-icon">◉</span>
+          <span id="conn-indicator-project" class="conn-indicator-project"></span>
+          <span id="conn-indicator-sep" class="conn-indicator-sep hidden">/</span>
+          <span id="conn-indicator-name" class="conn-indicator-name">No connection</span>
+        </div>
+        <select id="connection-select" class="hidden" title="Active connection"></select>
+        <div class="toolbar-spacer"></div>
+        <div id="status-dot" class="dot-idle" title="Status"></div>
+        <span id="status-label" class="status-label"></span>
+        <button id="btn-run" class="btn-run" title="⌘↵">
+          <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor"><path d="M1 1.5l7 3.5-7 3.5V1.5z"/></svg>
+          Run
+        </button>
+      </div>
+
+      <!-- Tab bar -->
+      <div id="tab-bar"></div>
+
+      <!-- Workspace: editor + output (output width is resizable via #resize-output handle) -->
+      <div id="workspace">
+        <div id="editor-container">
+          <button id="btn-copy-editor" class="editor-copy-btn" title="Copy code">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <div class="resize-handle" id="resize-output"></div>
+        <div id="output-panel">
+          <div id="output-header">
+            <span class="output-title">Output</span>
+            <div class="output-header-actions">
+            <button id="btn-clear-output" class="copy-all-btn" title="Clear output">Clear</button>
+            <button id="btn-copy-output-all" class="copy-all-btn" title="Copy all output">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy all
+            </button>
+            </div>
+          </div>
+          <div id="output-content">
+            <div class="output-empty">Run code (⌘↵) to see output here.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No-connection zero state -->
+      <div id="workspace-zero" class="workspace-zero hidden">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></svg>
+        <p class="workspace-zero-title">No connection</p>
+        <p class="workspace-zero-sub">Select a connection from the sidebar, or add one to your project.</p>
+        <button id="btn-zero-add-conn" class="btn-accent workspace-zero-btn">Add a connection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Welcome modal (zero state) -->
+  <div id="modal-welcome" class="modal hidden">
+    <div class="modal-box modal-welcome">
+      <img src="/icon.png" class="welcome-logo" alt="TinkerLite" />
+      <h2 class="welcome-title">Welcome to TinkerLite</h2>
+      <p class="welcome-sub">A lightweight scratchpad for running PHP against your Laravel projects. Start by creating your first project.</p>
+      <button id="btn-welcome-start" class="btn-accent welcome-cta">Create your first project</button>
+    </div>
+  </div>
+
+  <!-- Project modal -->
+  <div id="modal-project" class="modal hidden">
+    <div class="modal-box">
+      <h2 id="modal-project-title">New Project</h2>
+      <label>Name<input id="proj-name" type="text" placeholder="My App" /></label>
+      <div id="proj-path-section">
+        <div class="proj-path-label">Project path</div>
+        <div class="path-row">
+          <input id="proj-project-path" type="text" placeholder="~/Code/my-app" />
+          <button id="btn-proj-choose-path" class="btn-browse">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Browse
+          </button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-proj-cancel" class="btn-ghost">Cancel</button>
+        <button id="btn-proj-save" class="btn-accent">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection modal -->
+  <div id="modal-connection" class="modal hidden">
+    <div class="modal-box modal-conn">
+      <div class="conn-header">
+        <span id="modal-conn-title" class="conn-title">New Connection</span>
+        <button id="btn-conn-cancel" class="icon-btn">✕</button>
+      </div>
+
+      <!-- Step 1: Auth -->
+      <div id="conn-step-1" class="conn-step">
+        <div id="conn-project-row" class="conn-section hidden">
+          <div class="proj-path-label">Project</div>
+          <select id="conn-project-select" class="conn-project-select"></select>
+        </div>
+        <div class="conn-name-row">
+          <input id="conn-name" type="text" placeholder="Connection name" class="conn-name-input" />
+          <div class="toggle-row">
+            <button id="conn-type-local" class="toggle active">Local</button>
+            <button id="conn-type-ssh" class="toggle">SSH</button>
+          </div>
+        </div>
+
+        <!-- Local: project path -->
+        <div id="conn-local-fields" class="conn-section">
+          <div class="path-row">
+            <input id="conn-project-path" type="text" placeholder="Project path" />
+            <button id="btn-choose-path" class="btn-browse">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              Browse
+            </button>
+          </div>
+        </div>
+
+        <!-- SSH: auth fields -->
+        <div id="ssh-fields" class="hidden conn-section conn-ssh-section">
+          <div class="conn-host-row">
+            <input id="conn-ssh-user" type="text" placeholder="user" class="conn-user" />
+            <input id="conn-ssh-host" type="text" placeholder="hostname" />
+            <input id="conn-ssh-port" type="number" value="22" class="conn-port" />
+          </div>
+          <div class="toggle-row">
+            <button id="conn-auth-password" class="toggle active">Password</button>
+            <button id="conn-auth-key" class="toggle">SSH Key</button>
+          </div>
+          <div id="ssh-password-fields">
+            <div class="secret-row">
+              <input id="conn-ssh-password" type="password" placeholder="Password" />
+              <span id="conn-secret-stored" class="secret-badge hidden">saved ✓</span>
+            </div>
+          </div>
+          <div id="ssh-key-fields" class="hidden">
+            <input id="conn-ssh-key-path" type="text" placeholder="~/.ssh/id_rsa" />
+            <div class="secret-row">
+              <input id="conn-ssh-passphrase" type="password" placeholder="Passphrase (optional)" />
+              <span id="conn-passphrase-stored" class="secret-badge hidden">saved ✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="conn-test-result" class="hidden"></div>
+        <div class="conn-footer">
+          <button id="btn-conn-test" class="btn-ghost small">Test</button>
+          <button id="btn-conn-step1-save" class="btn-accent hidden">Save</button>
+          <button id="btn-conn-continue" class="btn-accent hidden">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Project path + PHP (SSH new only) -->
+      <div id="conn-step-2" class="conn-step hidden">
+        <div class="conn-section">
+          <div class="proj-path-label">Project path</div>
+          <input id="conn-project-path-ssh" type="text" placeholder="/var/www/my-app" class="conn-path-ssh" />
+        </div>
+        <div class="conn-section">
+          <div class="proj-path-label">PHP version</div>
+          <div id="conn-php-list" class="conn-php-list">
+            <div class="conn-php-detecting">Detecting…</div>
+          </div>
+        </div>
+        <div class="conn-footer">
+          <button id="btn-conn-back" class="btn-ghost small">← Back</button>
+          <button id="btn-conn-save" class="btn-accent">Save</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Snippet modal -->
+  <div id="modal-snippet" class="modal hidden">
+    <div class="modal-box">
+      <h2 id="modal-snippet-title">Save Snippet</h2>
+      <label>Name<input id="snip-name" type="text" placeholder="count users" /></label>
+      <div id="snip-code-row" class="hidden">
+        <div class="proj-path-label">Code</div>
+        <textarea id="snip-code" class="snip-code-editor" rows="10" spellcheck="false"></textarea>
+      </div>
+      <div id="snip-replace-row" class="snip-replace-row hidden">
+        <span class="snip-replace-label">Replace existing</span>
+        <select id="snip-replace-select" class="snip-replace-select">
+          <option value="">— create new —</option>
+        </select>
+      </div>
+      <div id="snip-match-notice" class="snip-match-notice hidden"></div>
+      <div class="modal-actions">
+        <button id="btn-snip-cancel" class="btn-ghost">Cancel</button>
+        <button id="btn-snip-save" class="btn-accent">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard shortcuts modal -->
+  <div id="modal-shortcuts" class="modal hidden">
+    <div class="modal-box modal-shortcuts">
+      <div class="shortcuts-header">
+        <span class="shortcuts-title">Keyboard Shortcuts</span>
+        <button id="btn-shortcuts-close" class="icon-btn">✕</button>
+      </div>
+      <div class="shortcuts-body">
+        <div class="shortcuts-group">
+          <div class="shortcuts-group-label">Editor</div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>↵</kbd><span>Run code</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>T</kbd><span>New tab</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>W</kbd><span>Close tab</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>Z</kbd><span>Undo</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd><span>Redo</span></div>
+          <div class="shortcut-row"><kbd>Tab</kbd><span>Indent</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>P</kbd><span>Autocomplete</span></div>
+        </div>
+        <div class="shortcuts-group">
+          <div class="shortcuts-group-label">Selection</div>
+          <div class="shortcut-row"><kbd>Alt</kbd><span>+ drag</span><span>Rectangular select</span></div>
+          <div class="shortcut-row"><kbd>Middle-click</kbd><span>+ drag</span><span>Rectangular select</span></div>
+        </div>
+        <div class="shortcuts-group">
+          <div class="shortcuts-group-label">App</div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>S</kbd><span>Save snippet</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>N</kbd><span>New project</span></div>
+          <div class="shortcut-row"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>K</kbd><span>New connection</span></div>
+          <div class="shortcut-row"><kbd>?</kbd><span>Show shortcuts</span></div>
+          <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme editor panel -->
+  <div id="panel-settings" class="hidden">
+    <div class="settings-header">
+      <span class="settings-title">Theme</span>
+      <button id="btn-settings-reset" class="btn-ghost small">Reset</button>
+      <button id="btn-settings-close" class="icon-btn">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section-label">Interface</div>
+      <div id="settings-group-interface"></div>
+      <div class="settings-section-label">Tabs</div>
+      <div id="settings-group-tabs"></div>
+      <div class="settings-section-label">Syntax</div>
+      <div id="settings-group-syntax"></div>
+      <div class="settings-section-label">Editor</div>
+      <div id="settings-group-editor"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
