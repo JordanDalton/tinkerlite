@@ -1,9 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
-import { initEditor, getCode, setCode, setCompletions, onEditorUpdate, appendCode, getSelection } from './editor.js'
+import { initEditor, getCode, setCode, setCompletions, onEditorUpdate, appendCode, getSelection, initFontSizeKeys } from './editor.js'
 import { initTabs, addTab, closeTab, saveActiveOutput, saveActiveCode, setTabSnippet, updateDirtyIndicator, getActiveTab, clearSnippetOrigins, saveTabsForConnection, restoreTabsForConnection } from './tabs.js'
 import { setProjects, getProjects, setActiveConnection, getActiveConnection, on as onSidebar } from './sidebar.js'
-import { showEmpty, showResult } from './output.js'
+import { showEmpty, showResult, initSearch } from './output.js'
 import { loadStoredColors, applyInterfaceColors } from './theme.js'
 import { initSettings } from './settings.js'
 import { initPathAutocomplete } from './path-autocomplete.js'
@@ -19,6 +19,8 @@ const storedColors = loadStoredColors()
 applyInterfaceColors(storedColors)
 initEditor(document.getElementById('editor-container'), runCode, storedColors)
 initSettings()
+initSearch()
+initFontSizeKeys()
 initPathAutocomplete(document.getElementById('conn-project-path'))
 initPathAutocomplete(document.getElementById('proj-project-path'))
 initTabs(document.getElementById('tab-bar'))
@@ -665,6 +667,8 @@ document.getElementById('btn-conn-test').addEventListener('click', async () => {
 
 function friendlyConnError(raw) {
   const s = String(raw).toLowerCase()
+  if (s.includes('failed to run php') && (s.includes('no such file') || s.includes('os error 2') || s.includes('not found')))
+    return 'PHP binary not found — ensure PHP is installed and on your PATH, or edit the connection to choose a valid PHP binary'
   if (s.includes('authentication failed') || s.includes('wrong password') || s.includes('publickey'))
     return 'Authentication failed — check username, password or SSH key'
   if (s.includes('connection refused'))

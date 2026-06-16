@@ -178,12 +178,18 @@ function autoReturn(string $code): string
             } elseif ($tok === '}') {
                 $depth--;
                 if ($depth === 0) {
-                    // Block statement closed — record it (canExpr=false for blocks)
                     if ($stmtStart !== null) {
-                        $statements[] = [$stmtStart, null, false];
-                        $stmtStart = null;
+                        if (!$stmtCanExpr) {
+                            // Block statement (function def, class, if/for/etc.) — record immediately
+                            $statements[] = [$stmtStart, null, false];
+                            $stmtStart = null;
+                            $inNewStmt = true;
+                        }
+                        // else: expression stmt with a closure inside (e.g. ->filter(fn(){})-> chain())
+                        // The statement continues after '}' — wait for the ';' to record it.
+                    } else {
+                        $inNewStmt = true;
                     }
-                    $inNewStmt = true;
                 }
             } elseif ($tok === ';' && $depth === 0) {
                 if ($stmtStart !== null) {

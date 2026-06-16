@@ -297,6 +297,23 @@ const PHP_CANDIDATES: &[&str] = &[
     "php", "php8.4", "php8.3", "php8.2", "php8.1", "php8.0", "php7.4",
 ];
 
+// On macOS, GUI apps inherit a stripped PATH that omits Homebrew dirs.
+// Check known install locations before falling back to `which`.
+fn which_local(cmd: &str) -> Option<String> {
+    #[cfg(target_os = "macos")]
+    for dir in &["/opt/homebrew/bin", "/usr/local/bin"] {
+        let p = format!("{}/{}", dir, cmd);
+        if std::path::Path::new(&p).exists() {
+            return Some(p);
+        }
+    }
+    Command::new("which").arg(cmd).output().ok()
+        .filter(|o| o.status.success())
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
 pub fn list_php_binaries(conn: &Connection, secret: &str) -> Vec<PhpBinary> {
     match conn.conn_type.as_str() {
         "local"  => list_php_local(),
@@ -307,13 +324,9 @@ pub fn list_php_binaries(conn: &Connection, secret: &str) -> Vec<PhpBinary> {
 
 fn list_php_local() -> Vec<PhpBinary> {
     PHP_CANDIDATES.iter().filter_map(|&cmd| {
-        let path = Command::new("which").arg(cmd).output().ok()
-            .filter(|o| o.status.success())
-            .and_then(|o| String::from_utf8(o.stdout).ok())
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())?;
+        let path = which_local(cmd)?;
 
-        let version = Command::new(cmd)
+        let version = Command::new(&path)
             .args(["-r", "echo PHP_VERSION;"])
             .output().ok()
             .and_then(|o| String::from_utf8(o.stdout).ok())
@@ -436,19 +449,13 @@ fn list_dir_ssh(conn: &Connection, secret: &str, path: &str) -> Result<Vec<Strin
     Ok(results)
 }
 
+pub fn detect_php_local() -> String {
+    which_local("php").unwrap_or_else(|| "php".to_string())
+}
+
 pub fn detect_php_remote(conn: &Connection, secret: &str) -> String {
     match conn.conn_type.as_str() {
-        "local" => {
-            let cmd = if cfg!(windows) { "where" } else { "which" };
-            Command::new(cmd)
-                .arg("php")
-                .output()
-                .ok()
-                .filter(|o| o.status.success())
-                .and_then(|o| String::from_utf8(o.stdout).ok())
-                .map(|s| s.trim().lines().next().unwrap_or("php").to_string())
-                .unwrap_or_else(|| "php".to_string())
-        }
+        "local" => which_local("php").unwrap_or_else(|| "php".to_string()),
         "ssh" => detect_php_ssh(conn, secret).unwrap_or_else(|_| "php".to_string()),
         _ => "php".to_string(),
     }

@@ -123,16 +123,7 @@ async fn scan_completions(conn: Connection) -> Result<String, String> {
 
 #[tauri::command]
 fn detect_php() -> String {
-    use std::process::Command;
-    let cmd = if cfg!(windows) { "where" } else { "which" };
-    Command::new(cmd)
-        .arg("php")
-        .output()
-        .ok()
-        .filter(|o| o.status.success())
-        .and_then(|o| String::from_utf8(o.stdout).ok())
-        .map(|s| s.trim().lines().next().unwrap_or("php").to_string())
-        .unwrap_or_else(|| "php".to_string())
+    runner::detect_php_local()
 }
 
 #[tauri::command]
